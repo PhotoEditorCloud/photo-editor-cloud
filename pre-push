@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# Purge the CloudFlare cache after pushing an update to GitHub Pages
+#
+# To use, rename this file to "post-receive" and drop it into the `.git/hooks/` directory in your project's root.
+# Change the $branch value based on the type of page you're deploying.
+# Use "master" for Organization Pages, and "gh-pages" for Project Pages.
+#
+# To install
+# aws configure
+#
+# Find your CloudFlare API token here: https://www.cloudflare.com/a/account/my-account
+# From https://gist.github.com/jonlong/240eb9a7501f1ae4c09f
+
+while read local_ref local_sha remote_ref remote_sha
+do
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+    echo "Current branch is $current_branch"
+
+    if [ "master" == "$current_branch" ]; then
+        S3_BUCKET=cdn.photoeditor.cloud
+
+        # echo
+        # echo "Building DEV"
+        # EMBED_URL="https://cdn.photoeditor.cloud/" npm run build
+
+        echo
+        echo "Pushing to s3"
+        aws s3 sync ./dist s3://$S3_BUCKET/ --acl public-read --delete
+
+        exit 0
+    fi
+
+done
